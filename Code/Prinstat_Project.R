@@ -35,6 +35,9 @@ new_armpit <- within(new_armpit,{
                     })
 new_armpit[1:8] <- new_armpit[1:8] /  rowSums(armpit_tidied[, 1:8])
 str(new_armpit)
+###RB
+table(new_armpit$Agecat) #unbalanced groups but ok
+####
 
 #2. Descriptive analysis
 
@@ -81,10 +84,23 @@ ggplot(long_armpit,
 
 describeBy(new_armpit[myvars], list(Agecat=new_armpit$Agecat))
 
+
 ggplot(long_armpit,
        aes(x = organisms, y = `Relative Aboundance`, fill = Agecat)) + 
        geom_bar(stat = 'identity', position = 'fill') +
        labs(title = "Raletive Aboundanc relate to Agecat")
+
+####RB
+#Look at dodged
+ggplot(long_armpit,
+       aes(x = organisms, y = `Relative Aboundance`, fill = Agecat)) + 
+  geom_bar(stat = 'identity', position = 'dodge') +
+  labs(title = "Raletive Aboundanc relate to Agecat")
+#Not sure how it can all be ~1 for one, need to look into this together
+#####
+####RB
+#We should rename the Cornebaceruym and Staphelicos to Cb1, Cb2... St1, St2... for readability of plots
+#####
 
 #2.2.4 Relative aboundance relate to BMI
 
