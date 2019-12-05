@@ -29,8 +29,9 @@ This gives us a 26 categories for 39 individuals...
 -We create top1 and top2
 -Aggregate CB & ST
 -Create an order based on most aggregated CB & ST: 'CBorST'
-```{r}
 
+When we view the data of age and CBorST, and sort on CBorST, we see no one above 30 has CB as dominant group. First indication of change in composition
+```{r}
 #Create top 3 classes per observations
 ##################
 #x <- toString(names(sort(data[1,1:8],decreasing = TRUE)[1:3]))
