@@ -1,0 +1,190 @@
+---
+title: "Untitled"
+author: "R_Boudry"
+date: "5-12-2019"
+output: html_document
+---
+
+Setting up data & small cleaning
+```{r setup}
+#Pre Explorative: glancing
+##################
+data <- read.csv(paste0(getwd(),"/data/armpit.txt"), sep = ' ')
+data <- data[complete.cases(data),]
+data$Gender <- factor(trimws(data[["Gender"]], which = c("both", "left", "right"), whitespace = "[ \t\r\n]"))
+##################
+
+#Rename the vars for readability
+##################
+names(data) <- c("Cb1", "Cb2", "Cb3", "Cb4", 
+                 "St1", "St2", "St3", "St4",  
+                 "Age", "BMI", "Gender" )
+##################
+
+```
+
+
+Here we create a string variable 'top3', refering to the top 3 classes per individual.
+This gives us a 26 categories for 39 individuals...
+-We create top1 and top2
+-Aggregate CB & ST
+-Create an order based on most aggregated CB & ST: 'CBorST'
+```{r}
+
+#Create top 3 classes per observations
+##################
+#x <- toString(names(sort(data[1,1:8],decreasing = TRUE)[1:3]))
+#top3
+data$top3 <- 0
+for(i in 1:nrow(data)){
+  data$top3[i] <- toString(names(sort(data[i,1:8],decreasing = TRUE)[1:3]))
+}
+table(data$top3)
+#We see 26 combinations for 39 observations.... With this data any difference
+#test will seem significant.
+#Let's build top 2
+
+#top2
+data$top2 <- 0
+for(i in 1:nrow(data)){
+  data$top2[i] <- toString(names(sort(data[i,1:8],decreasing = TRUE)[1:2]))
+}
+table(data$top2)
+#We still see 13 categories here... Still a lot.
+#Lets build top 1
+
+#top1
+data$top1 <- 0
+for(i in 1:nrow(data)){
+  data$top1[i] <- toString(names(sort(data[i,1:8],decreasing = TRUE)[1]))
+}
+table(data$top1)
+#Here we have only 4 categories. However the question was composition.
+#Let's aggregate Cv and ST, and then build top 2 & top 3
+
+#aggregation
+data$CB <- 0
+data$ST <- 0
+for(i in 1:nrow(data)){
+  data$CB[i] <- sum(data[i,1:4])
+  data$ST[i] <- sum(data[i,5:8])
+}
+par(mfrow=c(1,2))
+plot(data$Age, data$CB, main = 'CB & Age')
+plot(data$Age, data$ST, main = 'ST & Age')
+par(mfrow=c(1,1))
+#We get a hint of increase in CB, and decrease in ST, but needs testing.
+
+#Let's build CB_ST:
+#Which is dominant?
+data$CBorST <- 0
+for(i in 1:nrow(data)){
+  data$CBorST[i] <- toString(names(sort(data[i,15:16],decreasing = TRUE)[1:2]))
+}
+table(data$CBorST)
+#When we view the dataset, and sort on CBorST, we see no one above 30 has CB
+#as dominant group. First indication of change in composition
+#shown with dplyr
+library(dplyr)
+data%>%
+  select(Age, CBorST)%>%
+  filter(CBorST == "CB, ST")
+
+##################
+
+```
+
+Here we will sample from the uniform distribution and multiply by 100 (reflects our data)
+For Type1 testing, we sample from the exact distribution
+For Power testing, we limit the var1 range between .40 & .55, and create var2 by substracting var1 from 100 so they sum to 100 (as in our aggregated CB & ST).
+
+We see the Type1 being controlled for Spearman Rank cor test, similar to more
+established tests. 
+The Power seems to be a lot better for Spearman Rank cor test, so much that we should compare with more non parametric tests. If this holds we should try
+to understand why this test is so much more powerful while keeping Type1 controlled.
+```{r}
+
+#H0 & Power testing for our groups
+#assuming an even n in groups of 13 (39/3)
+#sampling from runif and *100 to reflect out data
+#Working with the aggregated level of CB & ST
+##################
+library(coin)
+results_H0_A_runif <- data.frame(size=c(rep(26,6)),dist=rep('runif',6),
+                               test=rep(c('perm_t','WMW','Spearman R'),2),
+                               Test=c(rep('Type1',3),rep('Power',3)),
+                               Value= 0)
+pt_p <- wmw_p <- spr_p <- c()
+p.t <- p.wmw <- p.spr <- c()
+pt_pA <- wmw_pA <- spr_pA <- c()
+p.tA <- p.wmwA <- p.sprA <- c()
+n <- 13
+for (i in 1:10000){
+  #For H0= mean from same distrib
+  Y1 <- runif(n)*100
+  Y2 <- runif(n)*100
+  #Groups
+  X <- factor (c( rep("CB",n), rep("ST",n )))
+  Y <- c(Y1 , Y2)
+  #Power, now we need an actual difference
+  Y1x <- runif(n, min = .40, max = .55)*100
+  Y2x <- 100-Y1x
+  #Groups
+  Xx <- factor (c( rep("CB",n), rep("ST",n )))
+  Yx <- c(Y1x , Y2x)
+  # permutation H0
+  p.t[i] <- pvalue(oneway_test(Y ~ X,
+                                distribution = approximate (B =9999)))
+  p.wmw[i] <- wilcox.test(Y1 ,Y2 ,
+                          exact = TRUE )$p.value
+  p.spr[i] <- cor.test(Y1,Y2, method = "spearman")$p.value
+  # permutation HA
+  p.tA[i] <- pvalue(oneway_test(Yx ~ Xx,
+                               distribution = approximate (B =9999)))
+  p.wmwA[i] <- wilcox.test(Y1x ,Y2x ,
+                          exact = TRUE )$p.value
+  p.sprA[i] <- cor.test(Y1x,Y2x, method = "spearman")$p.value
+}
+# Monte - Carlo approximation of the power
+# for alpha = .05
+pt_p[size] <- mean(p.t < .05)
+wmw_p[size] <-mean(p.wmw < .05)
+spr_p[size] <-mean(p.spr < .05)  
+pt_pA[size] <- mean(p.tA < .05)
+wmw_pA[size] <-mean(p.wmwA < .05)
+spr_pA[size] <-mean(p.sprA < .05) 
+
+results_H0_A_runif$Value[1] <- pt_p[1]
+results_H0_A_runif$Value[2] <- wmw_p[1]
+results_H0_A_runif$Value[3] <- spr_p[1]
+results_H0_A_runif$Value[4] <- pt_pA[1]
+results_H0_A_runif$Value[5] <- wmw_pA[1]
+results_H0_A_runif$Value[6] <- spr_pA[1]
+
+library(ggplot2)
+ggplot(results_H0_A_runif, aes(factor(dist), Value, fill = test)) + 
+  geom_bar(stat="identity", position = "dodge") + 
+  scale_fill_brewer(palette = "Greys")+
+  geom_hline(yintercept=0.05, col = 'red')+
+  ggtitle("Power, Type1, for 10k reps")+
+  facet_grid(. ~ Test)+
+  theme_classic()
+
+#This is a similar plot, but in comment to limit output
+library(gridExtra)
+ggplot(results_H0_A_runif[1:3,], aes(factor(dist), Value, fill = test)) + 
+  geom_bar(stat="identity", position = "dodge") + 
+  scale_fill_brewer(palette = "Greys")+
+  geom_hline(yintercept=0.05, col = 'red')+
+  ggtitle("Type1 for 10k reps")+
+  theme_classic() -> pl1
+
+ggplot(results_H0_A_runif[4:6,], aes(factor(dist), Value, fill = test)) + 
+  geom_bar(stat="identity", position = "dodge") + 
+  scale_fill_brewer(palette = "Greys")+
+  ggtitle("Power for 10k reps")+
+  theme_classic() -> pl2
+
+#grid.arrange(pl1, pl2, nrow = 1)
+```
+
