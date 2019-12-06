@@ -96,6 +96,37 @@ data%>%
 
 ```
 
+To better understand the Spearman Rank correlation significance test, we simulate
+data with the same sample size (n1=n2=13) as observed.
+It has to be noted that smaller sample sizes take higher correlation estimates for a significant p-value (0.05).
+```{r}
+p <- est <- px <- estx <- c()
+for (i in 1:10000){
+  Y1 <- rnorm(13)
+  Y2 <- rnorm(13)
+  Y1x <- rnorm(60)
+  Y2x <- rnorm(60)
+  p[i] <- cor.test(Y1,Y2, method = "spearman")$p.value
+  est[i] <- cor.test(Y1,Y2, method = "spearman")$estimate
+  px[i] <- cor.test(Y1x,Y2x, method = "spearman")$p.value
+  estx[i] <- cor.test(Y1x,Y2x, method = "spearman")$estimate
+}
+x <- data.frame(est, p)
+xx <- data.frame(estx, px)
+par(mfrow=c(1,4))
+plot(est, p, main = 'Correlation Estimates and \n Spearman Rank p-values \n from rnorm sampling (n1=n2=13)')
+abline(h = 0.05, col = 'red')
+hist(x[x$p<=0.05,1], breaks = 40, main=paste('+-', round(min(abs(x[x$p<0.05,1])),3),
+     'seems to be minimum Spearman Rank \n cor value for 0.05 p-value \n (n1=n2=13)'))
+
+plot(est, p, main = 'Correlation Estimates and \n Spearman Rank p-values \n from rnorm sampling (n1=n2=60)')
+abline(h = 0.05, col = 'red')
+hist(xx[xx$p<=0.05,1], breaks = 40, main=paste('+-', round(min(abs(xx[xx$p<0.05,1])),3),
+     'seems to be minimum Spearman Rank \n cor value for 0.05 p-value \n (n1=n2=13)'))
+
+par(mfrow=c(1,1))
+```
+
 Here we will sample from the uniform distribution and multiply by 100 (reflects our data)
 For Type1 testing, we sample from the exact distribution
 For Power testing, we limit the var1 range between .40 & .55, and create var2 by substracting var1 from 100 so they sum to 100 (as in our aggregated CB & ST).
