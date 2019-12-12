@@ -30,8 +30,7 @@ This gives us a 26 categories for 39 individuals...
 -Aggregate CB & ST
 -Create an order based on most aggregated CB & ST: 'CBorST'
 
-When we view the data of age and CBorST, and sort on CBorST, we see no one above 30 has CB as dominant group. 
-First indication of change in composition
+When we view the data of age and CBorST, and sort on CBorST, we see no one above 30 has CB as dominant group. First indication of change in composition
 ```{r}
 #Create top 3 classes per observations
 ##################
@@ -96,9 +95,10 @@ data%>%
 
 ```
 
+
 To better understand the Spearman Rank correlation significance test, we simulate
 data with the same sample size (n1=n2=13) as observed.
-It has to be noted that smaller sample sizes take higher correlation estimates for a significant p-value (0.05).
+It has to be noted that smaller sample sizes take higher correlation estimates for a significant p-value.
 ```{r}
 p <- est <- px <- estx <- c()
 for (i in 1:10000){
@@ -125,7 +125,10 @@ hist(xx[xx$p<=0.05,1], breaks = 40, main=paste('+-', round(min(abs(xx[xx$p<0.05,
      'seems to be minimum Spearman Rank \n cor value for 0.05 p-value \n (n1=n2=60)'))
 
 par(mfrow=c(1,1))
+
 ```
+
+
 
 Here we will sample from the uniform distribution and multiply by 100 (reflects our data)
 For Type1 testing, we sample from the exact distribution
