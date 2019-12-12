@@ -230,9 +230,71 @@ ggplot(results_H0_A_runif[4:6,], aes(factor(dist), Value, fill = test)) +
 
 
 ######################################################
-################## Merton           ##################
+################## Meron           ##################
 ######################################################
-#code
+#I added only the recent codes: which i used the aggregated columns from Robin
+#to better see any association 
+```{r pressure, echo=FALSE}
+
+#creat variables
+data <-na.omit(data)
+summary(is.na(data)) # no missing values
+
+coryn1<-data$Corynebacterium.1
+coryn2<-data$Corynebacterium.2
+coryn3<-data$Corynebacterium.3
+coryn4<-data$Corynebacterium.4
+
+data$corynTot<-(coryn1+coryn2+coryn3+coryn4)
+staph1<-data$Staphylococcus.1
+staph2<-data$Staphylococcus.2
+staph3<-data$Staphylococcus.3
+staph4<-data$Staphylococcus.4
+data$staphTot<-staph1+staph2+staph3+staph4
+age<-data$Age
+
+## Corynebacteria species
+ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = coryn1))
+
+ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = coryn2))
+
+ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = coryn3))
+
+ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = coryn4))
+
+ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = corynTot))  #aggregating the 4 coryn genes 
+                                                  #there seems a relation for some part #group of age and it is nonlinear 
+
+cor(age,data$corynTot) ###0.476
+
+```{r pressure, echo=FALSE}
+
+#Staphylococcus species 
+
+ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = staph1))
+
+ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = staph2))
+
+ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = staph3))
+
+ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = staph4))
+
+ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = staphTot))
+
+cor(age,data$staphTot)  # -0.476
+```
+
+```
 ######################################################
 ######################################################
 
