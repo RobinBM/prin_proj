@@ -302,6 +302,8 @@ cor(age,data$staphTot)  # -0.476
 ################## Lin              ##################
 ######################################################
 #code
+```{r pressure, echo=FALSE}
+
 install.packages('corrgram')
 install.packages('psych')
 library(psych)
