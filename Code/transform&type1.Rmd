@@ -292,6 +292,17 @@ ggplot(data = data) +
   geom_smooth(mapping = aes(x = age, y = staphTot))
 
 cor(age,data$staphTot)  # -0.476
+
+
+### wilcox.test and t.test for the aggregated columns 
+## we cant use t.test and wilcox.test for the agregated columns becouse we dont have equal sizes in the two groups and also  #the distribution is not normal(for t.test)
+t.test(data$Age[data$class==1]~data$Age[data$class==0],
+       alternative ="two.sided", paired=FALSE, var.equal=TRUE) # error
+wilcox.test(data$Age[data$class==1]~data$Age[data$class==0], alternative ="greater") #error
+# so the only option is to do the rank tets with 4 species agregated: corynTot and staphTot
+wilcox.test(data$corynTot, data$Age)
+wilcox.test(data$staphTot, data$Age)
+
 ```
 
 ```
