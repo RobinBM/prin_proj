@@ -206,7 +206,17 @@ ggplot(results_H0_A_runif, aes(factor(dist), Value, fill = test)) +
 
 For group comparisons the anova was out of order, but the Wilcoxon Rank test as seen in the course was suitable.
 
-```{r spearmanbehav, include=FALSE, message=FALSE}
+
+# Results
+
+# Conclusion
+
+# References
+Hauke, J., & Kossowski, T. (2011). Comparison of values of Pearson's and Spearman's correlation coefficients on the same sets of data. Quaestiones geographicae, 30(2), 87-93.
+
+# Appendix
+A look at difference of Spearman Rank correlation estimate significanes for different sample sizes
+```{r spearmanbehav, echo=FALSE, message=FALSE}
 p <- est <- px <- estx <- c()
 for (i in 1:10000){
   Y1 <- rnorm(13)
@@ -231,14 +241,3 @@ hist(xx[xx$p<=0.05,1], breaks = 40, main=paste('+-', round(min(abs(xx[xx$p<0.05,
 par(mfrow=c(1,1))
 
 ```
-
-
-
-# Results
-
-# Conclusion
-
-
-
-# References
-Hauke, J., & Kossowski, T. (2011). Comparison of values of Pearson's and Spearman's correlation coefficients on the same sets of data. Quaestiones geographicae, 30(2), 87-93.
