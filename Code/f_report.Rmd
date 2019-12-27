@@ -131,12 +131,8 @@ We are confronted with asample size and since no information is given about the 
 For correlation testing, we consulted Hauke & Kowoski(2011)'s comparison of correlation tests, and concluded that Spearman rank was suitable for our problem.
 
 To better understand the Spearman Rank correlation significance test, we simulated
-data with the same sample size (n1=n2=13) which resembles what we observed and with higher sample sizes.. We noted that smaller sample sizes take higher correlation estimates for a significant p-value.
-Here we will sample from the uniform distribution and multiply by 100 (reflects our data)
-For Type1 testing, we sample from the exact distribution
-For Power testing, we limit the var1 range between .40 & .55, and create var2 by substracting var1 from 100 so they sum to 100 (as in our aggregated CB & ST).
-
-We also checked the Type1 error in a simulation, and saw it being controlled for Spearman Rank cor test, similar to more established tests. 
+data with the same sample size (n1=n2=13) which resembles what we observed and with higher sample sizes.. We noted that smaller sample sizes take higher correlation estimates for a significant p-value (see appendix).
+We also checked the Type1 error in a simulation, and saw it being controlled for Spearman Rank cor test, similar to more established tests (see appendix). 
 
 For group comparisons the anova was out of order, but the Wilcoxon Rank test as seen in the course was suitable.
 
