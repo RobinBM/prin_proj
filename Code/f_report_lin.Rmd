@@ -1,0 +1,317 @@
+---
+title: "Principles of Statistical Analysis Report"
+author: 
+- Robin Boudry, Lin Tang, Merton..., Stijn...
+date: "2020-01-03"
+output: 
+  pdf_document:
+    fig_caption: yes
+    highlight: pygments
+    keep_tex: yes
+    number_sections: yes
+    toc: no
+header-includes: 
+  - \usepackage{float}
+  - \usepackage{longtable}
+---
+\centering
+
+\raggedright
+
+\clearpage
+
+\tableofcontents
+
+
+```{r, include=FALSE}
+#INFO
+#5 pages MAX
+# no intro needed, just METHODS, RESULTS, CONCLUSION
+# mention if assumptions are met for each test
+
+```
+
+
+# Methods
+
+## Data Cleaning & Transformation
+Data of 40 subjects was provided, containing information of relative abundances of 8 bacterial species (to be divided in 2 geni) present in their armpit, their BMI, age and gender. 1 observation was removed due to missing data. The categorical variable 'Gender' needed some cleaning to remove whitespaces around some codings of gendertype. For readability and easier coding the names 'Corynebacterium1' etc.. was shortened to 'Cb1' as was 'Staphylococcus1' etc.. shortened to 'St1'
+A string variable 'top3' was created, refering to the top 3 classes per individual.
+This gives us a 26 categories for 39 individuals...We also create top1 and top2, further aggregating the dominant bacteria and lessening the possible combinations.
+
+
+### Descriptive analysis
+When we view the data of age and CBorST, and sort on CBorST, we see no one above 30 has CB as dominant group. First indication of change in composition. When plotting the Geni with age, we see Corynebacterium having a cluster of low values in the younger age group, and Staphylococcus having a cluster of high values in the younger age group. 
+
+### Categorical variable
+Moreover, the continous variable Age is discreted to Agecat as a categorical variable The Agecat is a 3 level ordered factor variable made up by Junior(<=26), Adult(27<=age<=50), Senior(>=51), which is prepared for analysis the relationship of agecat and genus composition.
+
+## Categorical variable analysis
+### Interaction among factors
+We should confirm that there is no interaction among those factors(Agecat, Gender, BMI) before we do the ANOVA for each of them. We used the two-way ANOVA and interaction graphs to check if the intercations are statistically significant. If the the interactions between Agecat and other two factors are statistically significant, the Agecat variable cannot be analyzed. In this situation, we have to take consider of the interaction of both factors rather than the individual factor. If there are no interaction between each two of them, then we can do the one-way ANOVA to Agecat.
+
+### One-way ANOVA
+The sample sizes of each Agecat are unequal, the normally one-way ANOVA and POST HOC test, such as Fisher's LSD and Tukey's HSD, are not availiable for this situation. So we choosed the Kruskal–Wallis test with the null hypothesis that the medians of all groups are equal, and the alternative hypothesis that at least one population median of one group is different from the population median of at least one other group.
+
+
+```{r setup, echo=FALSE, message=FALSE, include=FALSE}
+#'Setting up data & small cleaning & transformation'
+
+#Pre Explorative: glancing
+##################
+data <- read.csv(paste0(getwd(),"/data/armpit.txt"), sep = ' ')
+data <- data[complete.cases(data),]
+data$Gender <- factor(trimws(data[["Gender"]], which = c("both", "left", "right"), whitespace = "[ \t\r\n]"))
+##################
+
+#Rename the vars for readability
+##################
+names(data) <- c("Cb1", "Cb2", "Cb3", "Cb4", 
+                 "St1", "St2", "St3", "St4",  
+                 "Age", "BMI", "Gender" )
+##################
+
+#Create top 3 classes per observations
+##################
+#x <- toString(names(sort(data[1,1:8],decreasing = TRUE)[1:3]))
+#top3
+data$top3 <- 0
+for(i in 1:nrow(data)){
+  data$top3[i] <- toString(names(sort(data[i,1:8],decreasing = TRUE)[1:3]))
+}
+#table(data$top3)
+
+#We see 26 combinations for 39 observations.... With this data any difference
+#test will seem significant.
+#Let's build top 2
+
+#top2
+data$top2 <- 0
+for(i in 1:nrow(data)){
+  data$top2[i] <- toString(names(sort(data[i,1:8],decreasing = TRUE)[1:2]))
+}
+#table(data$top2)
+#We still see 13 categories here... Still a lot.
+#Lets build top 1
+
+#top1
+data$top1 <- 0
+for(i in 1:nrow(data)){
+  data$top1[i] <- toString(names(sort(data[i,1:8],decreasing = TRUE)[1]))
+}
+#table(data$top1)
+#Here we have only 4 categories. However the question was composition.
+#Let's aggregate Cv and ST, and then build top 2 & top 3
+
+#aggregation
+data$CB <- 0
+data$ST <- 0
+for(i in 1:nrow(data)){
+  data$CB[i] <- sum(data[i,1:4])
+  data$ST[i] <- sum(data[i,5:8])
+}
+par(mfrow=c(1,2))
+plot(data$Age, data$CB, main = 'CB & Age')
+plot(data$Age, data$ST, main = 'ST & Age')
+par(mfrow=c(1,1))
+#We get a hint of increase in CB, and decrease in ST, but needs testing.
+
+#Let's build CB_ST:
+#Which is dominant?
+data$CBorST <- 0
+for(i in 1:nrow(data)){
+  data$CBorST[i] <- toString(names(sort(data[i,15:16],decreasing = TRUE)[1:2]))
+}
+#table(data$CBorST)
+
+#When we view the dataset, and sort on CBorST, we see no one above 30 has CB
+#as dominant group. First indication of change in composition
+#shown with dplyr
+library(dplyr)
+#data%>%
+#  select(Age, CBorST)%>%
+#  filter(CBorST == "CB, ST")
+
+#Age discrete to Agecat as 3 ordered factors
+data <- transform(data, Agecat = Age)
+data <- within(data,{
+                    Agecat[Age <= 25] <- "Junior"
+                    Agecat[Age >= 26] <- "Adult"
+                    Agecat[Age >= 51] <- "Senior"
+                    })
+data$Agecat <- factor(data$Agecat, ordered = TRUE, levels = c('Junior','Adult', 'Senior'))
+
+##################
+
+
+```
+
+
+## Choice of non parametric tests
+We are confronted with asample size and since no information is given about the underlying distribution, we have to rely on non-parametric methods to make valid inferences.
+For correlation testing, we consulted Hauke & Kowoski(2011)'s comparison of correlation tests, and concluded that Spearman rank was suitable for our problem.
+
+To better understand the Spearman Rank correlation significance test, we simulated
+data with the same sample size (n1=n2=13) which resembles what we observed and with higher sample sizes.. We noted that smaller sample sizes take higher correlation estimates for a significant p-value.
+Here we will sample from the uniform distribution and multiply by 100 (reflects our data)
+For Type1 testing, we sample from the exact distribution
+For Power testing, we limit the var1 range between .40 & .55, and create var2 by substracting var1 from 100 so they sum to 100 (as in our aggregated CB & ST).
+
+We also checked the Type1 error in a simulation, and saw it being controlled for Spearman Rank cor test, similar to more established tests. 
+
+For group comparisons the anova was out of order, but the Wilcoxon Rank test as seen in the course was suitable.
+
+
+# Results
+
+## Agecat analysis
+### Interaction analysis
+
+The interaction graphs both show the across of the lines, which means there are interactions between Agecat and Gender/BMI. From the ANOVA tables, we found the p-value of Agecat:Gender and Agecat:BMI are 0.3689 and 0.2056 perspectively. As the interactions are not statistically significant, we are allowed to use one-way ANOVA to analysis the Agecat varible individully.
+```{r echo=FALSE, message=FALSE}
+
+#Interaction graphs
+attach(data)
+par(mfrow=c(1,2))
+interaction.plot(Agecat, Gender, ST, 
+                 xlab = "Agecat", 
+                 ylab = "Staphylococcus", 
+                 trace.label = "Gender",
+                 main = "Interaction of Agecat and Gender",
+                 ylim = c(0,100),  
+                 pch = c(19,17), 
+                 fixed = TRUE)
+interaction.plot(Agecat, BMI, ST, 
+                 xlab = "Agecat", 
+                 ylab = "Staphylococcus", 
+                 trace.label = "BMI",
+                 main = "Interaction of Agecat and BMI",
+                 ylim = c(0,100),  
+                 pch = c(19,17), 
+                 fixed = TRUE)
+
+#Two-way ANOVA
+#Agecat vs Gender
+fit_1 <- aov(ST~Agecat*Gender)
+summary(fit_1)
+#Agecat vs BMI
+fit_2 <- aov(ST~Agecat*BMI)
+summary(fit_2)
+
+```
+
+### Kruskal-Wallis test of Agecat
+
+The boxplot shows that there are some difference between 3 agecats. From the result of the Kruskal-Wallis rank sum test, we found the p-value is 0.09773, which is greater than alpha(0.05), so we cannot reject the null hypothesis with this test.
+```{r echo=FALSE, message=FALSE}
+
+#Kruskal Wallis test
+boxplot(ST~Agecat,
+        ylab = "Staphylococcus",
+        main = "Staphylococcus by Agecat")
+kruskal.test(ST~Agecat)
+```
+
+
+# Conclusion
+
+## Genus composition relate to age
+
+### Genus composition among agecat
+Since the p-value is greater than 0.05, we cannot to reject the null hypothesis, which means the genus composition do not shows significant difference among Agecat. 
+
+# References
+Hauke, J., & Kossowski, T. (2011). Comparison of values of Pearson's and Spearman's correlation coefficients on the same sets of data. Quaestiones geographicae, 30(2), 87-93.
+
+# Appendix
+A look at difference of Spearman Rank correlation estimate significanes for different sample sizes
+```{r spearmanbehav, echo=FALSE, message=FALSE}
+p <- est <- px <- estx <- c()
+for (i in 1:10000){
+  Y1 <- rnorm(13)
+  Y2 <- rnorm(13)
+  Y1x <- rnorm(60)
+  Y2x <- rnorm(60)
+  p[i] <- cor.test(Y1,Y2, method = "spearman")$p.value
+  est[i] <- cor.test(Y1,Y2, method = "spearman")$estimate
+  px[i] <- cor.test(Y1x,Y2x, method = "spearman")$p.value
+  estx[i] <- cor.test(Y1x,Y2x, method = "spearman")$estimate
+}
+x <- data.frame(est, p)
+xx <- data.frame(estx, px)
+par(mfrow=c(1,2))
+
+hist(x[x$p<=0.05,1], breaks = 40, main=paste('+-', round(min(abs(x[x$p<0.05,1])),3),
+     'seems to be minimum Spearman Rank \n cor value for 0.05 p-value \n (n1=n2=13)'))
+
+hist(xx[xx$p<=0.05,1], breaks = 40, main=paste('+-', round(min(abs(xx[xx$p<0.05,1])),3),
+     'seems to be minimum Spearman Rank \n cor value for 0.05 p-value \n (n1=n2=60)'))
+
+par(mfrow=c(1,1))
+```
+
+Type1 simulation for Spearman rank.
+```{r spearmanType1, echo=FALSE, message=FALSE}
+
+#H0 & Power testing for our groups
+#assuming an even n in groups of 13 (39/3)
+#sampling from runif and *100 to reflect out data
+#Working with the aggregated level of CB & ST
+##################
+library(coin)
+results_H0_A_runif <- data.frame(size=c(rep(26,6)),dist=rep('runif',6),
+                               test=rep(c('perm_t','WMW','Spearman R'),2),
+                               Test=c(rep('Type1',3),rep('Power',3)),
+                               Value= 0)
+pt_p <- wmw_p <- spr_p <- c()
+p.t <- p.wmw <- p.spr <- c()
+pt_pA <- wmw_pA <- spr_pA <- c()
+p.tA <- p.wmwA <- p.sprA <- c()
+n <- 13
+for (i in 1:1000){
+  #For H0= mean from same distrib
+  Y1 <- runif(n)*100
+  Y2 <- runif(n)*100
+  #Groups
+  X <- factor (c( rep("CB",n), rep("ST",n )))
+  Y <- c(Y1 , Y2)
+  #Power, now we need an actual difference
+  Y1x <- runif(n, min = .40, max = .55)*100
+  Y2x <- 100-Y1x
+  #Groups
+  Xx <- factor (c( rep("CB",n), rep("ST",n )))
+  Yx <- c(Y1x , Y2x)
+  # permutation H0
+  p.t[i] <- pvalue(oneway_test(Y ~ X,
+                                distribution = approximate (nresample =9999)))
+  p.wmw[i] <- wilcox.test(Y1 ,Y2 ,
+                          exact = TRUE )$p.value
+  p.spr[i] <- cor.test(Y1,Y2, method = "spearman")$p.value
+  # permutation HA
+  p.tA[i] <- pvalue(oneway_test(Yx ~ Xx,
+                               distribution = approximate (nresample =9999)))
+  p.wmwA[i] <- wilcox.test(Y1x ,Y2x ,
+                          exact = TRUE )$p.value
+  p.sprA[i] <- cor.test(Y1x,Y2x, method = "spearman")$p.value
+}
+# Monte - Carlo approximation of the power
+# for alpha = .05
+
+
+results_H0_A_runif$Value[1] <- mean(p.t < .05)
+results_H0_A_runif$Value[2] <- mean(p.wmw < .05)
+results_H0_A_runif$Value[3] <- mean(p.spr < .05)  
+results_H0_A_runif$Value[4] <- mean(p.tA < .05)
+results_H0_A_runif$Value[5] <- mean(p.wmwA < .05)
+results_H0_A_runif$Value[6] <- mean(p.sprA < .05) 
+
+library(ggplot2)
+ggplot(results_H0_A_runif, aes(factor(dist), Value, fill = test)) + 
+  geom_bar(stat="identity", position = "dodge") + 
+  scale_fill_brewer(palette = "Greys")+
+  geom_hline(yintercept=0.05, col = 'red')+
+  ggtitle("Power, Type1, for 10k reps")+
+  facet_grid(. ~ Test)+
+  theme_classic()
+```
+
