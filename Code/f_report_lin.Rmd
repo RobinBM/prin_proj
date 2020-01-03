@@ -217,55 +217,48 @@ To verify if genus composition changes with age we use smooth line plot for each
 
 In Staphylococcus genus the dominant species is staphylococcus.1 (appendixx..). In opposite to Corynebacteria at young age it attains higher relative abundance (greater than 75%), which gradually decreases till age of 40 year. The relative abundance remains constant at its minimum (below 50 ) between age of 40 and 60 years, and increases for ages older than 60 year.
 
-```{r include=FALSE}
+```{r echo = FALSE}
 
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
-# install.packages("gridExtra")
 library(gridExtra)
-#setwd("/Users/meron/Downloads/2019_2020/prinstat/project")
-#setwd("/Users/meron/Downloads/2019_2020/prinstat/project")
-data <- read.table("armpit.txt", header=TRUE, sep='')
-summary(is.na(data)) # 1 found in age which is a similar observation for gender too
 
-#cleaning missing values
-data <-na.omit(data)
-summary(is.na(data)) # no missing values
+#### plot for all 8 species 
 
-#creat variables for Corynebacterium species
-coryn1<-data$Corynebacterium.1
-coryn2<-data$Corynebacterium.2
-coryn3<-data$Corynebacterium.3
-coryn4<-data$Corynebacterium.4
+pcor1<-ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = Cb1))
 
-#total Corynebacterium by adding the four species
-data$corynTot<-(coryn1+coryn2+coryn3+coryn4)
-Corynebacterium<-data$corynTot
+pcor2<-ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = Cb2))
 
-#creat variables for Staphylococcus species
-staph1<-data$Staphylococcus.1
-staph2<-data$Staphylococcus.2
-staph3<-data$Staphylococcus.3
-staph4<-data$Staphylococcus.4
-##total Staphylococcus by adding the four species
-data$staphTot<-staph1+staph2+staph3+staph4
-Staphylococcus<-data$staphTot
+pcor3<-ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = Cb3))
 
-age<-data$Age
-gender<-data$Gender
-BMI<-data$BMI
-##################
+pcor4<-ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = Cb4))
+
+pstaph4<-ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = St4))
+
+pstaph3<-ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = St3))
+
+pstaph2<-ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = St2))
+
+pstaph1<-ggplot(data = data) + 
+  geom_smooth(mapping = aes(x = age, y = St1))
 ```
 
  
 ```{r echo = FALSE}
 ###agregated species smoth line plots
-ggplot(data = data, aes(x = age, y = Staphylococcus)) +
+ggplot(data = data, aes(x = age, y = ST)) +
   geom_point() +
   geom_smooth()
 
-ggplot(data = data, aes(x = age, y = Corynebacterium)) + 
+ggplot(data = data, aes(x = age, y = CB)) + 
   geom_point() +
   geom_smooth()
 ```
@@ -275,43 +268,15 @@ For ease of interpretation and  comparison between  two Genus groups, we aggrega
 In case of Staphylococcus the relative abundancy is high at early age of about 20 and gradually deacreses with increasing age.  Lower relative abundacy for this genus is attined when age is between 40 and 60.  For older ages than 60 its availability decreases so as its amount.
 
 It is clearly seen that the change in relative abundancy with age is not linear. consquently the correlations between the aggregated relative abundancy and age is calculated using the spearman correlation test in R.  correlation coefficient obtained for Corynebacterium and Staphylococcus is 0.40 and -0.41.
+
 ```{r include=FALSE}
 
 #correlation test
-cor.test(Corynebacterium, age, method = "spearman")
-cor.test(Staphylococcus, age, method = "spearman")
-
+cor.test(CB, age, method = "spearman")
+cor.test(ST, age, method = "spearman")
 
 ```
 
-
-```{r echo = FALSE}
-#### plot for all 8 species 
-
-pcor1<-ggplot(data = data) + 
-  geom_smooth(mapping = aes(x = age, y = Corynebacterium.1))
-
-pcor2<-ggplot(data = data) + 
-  geom_smooth(mapping = aes(x = age, y = Corynebacterium.2))
-
-pcor3<-ggplot(data = data) + 
-  geom_smooth(mapping = aes(x = age, y = Corynebacterium.3))
-
-pcor4<-ggplot(data = data) + 
-  geom_smooth(mapping = aes(x = age, y = Corynebacterium.4))
-
-pstaph4<-ggplot(data = data) + 
-  geom_smooth(mapping = aes(x = age, y = Staphylococcus.4))
-
-pstaph3<-ggplot(data = data) + 
-  geom_smooth(mapping = aes(x = age, y = Staphylococcus.3))
-
-pstaph2<-ggplot(data = data) + 
-  geom_smooth(mapping = aes(x = age, y = Staphylococcus.2))
-
-pstaph1<-ggplot(data = data) + 
-  geom_smooth(mapping = aes(x = age, y = Staphylococcus.1))
-```
 
 
 # Conclusion
@@ -325,7 +290,7 @@ Since the p-value is greater than 0.05, we cannot to reject the null hypothesis,
 Hauke, J., & Kossowski, T. (2011). Comparison of values of Pearson's and Spearman's correlation coefficients on the same sets of data. Quaestiones geographicae, 30(2), 87-93.
 
 # Appendix
-plots for each species versus age continuous
+plots for each species versus age as continuous variable
 ```{r echo = FALSE}
 grid.arrange(pcor1, pcor2, pcor3, pcor4, nrow = 2)
 grid.arrange(pstaph1, pstaph2, pstaph3, pstaph4, nrow = 2)
