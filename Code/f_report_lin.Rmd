@@ -1,7 +1,7 @@
 ---
 title: "Principles of Statistical Analysis Report"
 author: 
-- Robin Boudry, Lin Tang, Merton..., Stijn...
+- Robin Boudry, Lin Tang, Mengistu Meron, Stijn...
 date: "2020-01-03"
 output: 
   pdf_document:
@@ -255,7 +255,6 @@ Staphylococcus<-data$staphTot
 age<-data$Age
 gender<-data$Gender
 BMI<-data$BMI
-data$Gender<-factor(trimws(data[["Gender"]], which=c("both", "left", "right"), whitespace="[ \t\r\n]"))
 ##################
 ```
 
@@ -270,17 +269,17 @@ ggplot(data = data, aes(x = age, y = Corynebacterium)) +
   geom_point() +
   geom_smooth()
 ```
+
 For ease of interpretation and  comparison between  two Genus groups, we aggregate each of the four species in to one respective  group,  Corynebacterium and Staphylococcus. The result shows that the distribution of aggregated genus groups follows the dominant species distribution. As a result for Corynebacterium the relative abundancy gets minimum at the early age of around 20, and suddenly increases at around 24 year. It gets maximum approximately at age 43 and 60 years.  It drops gradually for ages older than 60 year. 
 
 In case of Staphylococcus the relative abundancy is high at early age of about 20 and gradually deacreses with increasing age.  Lower relative abundacy for this genus is attined when age is between 40 and 60.  For older ages than 60 its availability decreases so as its amount.
 
 It is clearly seen that the change in relative abundancy with age is not linear. consquently the correlations between the aggregated relative abundancy and age is calculated using the spearman correlation test in R.  correlation coefficient obtained for Corynebacterium and Staphylococcus is 0.40 and -0.41.
-
 ```{r include=FALSE}
 
 #correlation test
-cor.test(corynTot, age, method = "spearman")
-cor.test(staphTot, age, method = "spearman")
+cor.test(Corynebacterium, age, method = "spearman")
+cor.test(Staphylococcus, age, method = "spearman")
 
 
 ```
@@ -314,6 +313,7 @@ pstaph1<-ggplot(data = data) +
   geom_smooth(mapping = aes(x = age, y = Staphylococcus.1))
 ```
 
+
 # Conclusion
 
 ## Genus composition relate to age
@@ -325,12 +325,12 @@ Since the p-value is greater than 0.05, we cannot to reject the null hypothesis,
 Hauke, J., & Kossowski, T. (2011). Comparison of values of Pearson's and Spearman's correlation coefficients on the same sets of data. Quaestiones geographicae, 30(2), 87-93.
 
 # Appendix
-1. plots for each species versus age
+plots for each species versus age continuous
 ```{r echo = FALSE}
 grid.arrange(pcor1, pcor2, pcor3, pcor4, nrow = 2)
 grid.arrange(pstaph1, pstaph2, pstaph3, pstaph4, nrow = 2)
 ```
-2. A look at difference of Spearman Rank correlation estimate significanes for different sample sizes
+A look at difference of Spearman Rank correlation estimate significanes for different sample sizes
 ```{r spearmanbehav, echo=FALSE, message=FALSE}
 p <- est <- px <- estx <- c()
 for (i in 1:10000){
