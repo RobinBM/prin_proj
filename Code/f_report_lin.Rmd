@@ -1,18 +1,20 @@
 ---
-title: "Principles of Statistical Analysis Report"
-author: 
-- Robin Boudry, Lin Tang, Mengistu Meron, Stijn...
-date: "2020-01-03"
-output: 
+title: "Principles of Statistical Analysis Project Report"
+author: "Robin Boudry, Lin Tang, Mengistu Meron, Stijn Vandenbulcke"
+date: '2020-01-03'
+output:
   pdf_document:
     fig_caption: yes
     highlight: pygments
     keep_tex: yes
     number_sections: yes
     toc: no
-header-includes: 
-  - \usepackage{float}
-  - \usepackage{longtable}
+  html_document:
+    df_print: paged
+    toc: no
+header-includes:
+- \usepackage{float}
+- \usepackage{longtable}
 ---
 \centering
 
@@ -22,13 +24,14 @@ header-includes:
 
 \tableofcontents
 
+\clearpage
+
 
 ```{r, include=FALSE}
 #INFO
 #5 pages MAX
 # no intro needed, just METHODS, RESULTS, CONCLUSION
 # mention if assumptions are met for each test
-
 ```
 
 
@@ -41,7 +44,8 @@ This gives us a 26 categories for 39 individuals...We also create top1 and top2,
 
 
 ### Descriptive analysis
-When we view the data of age and CBorST, and sort on CBorST, we see no one above 30 has CB as dominant group. First indication of change in composition. When plotting the Geni with age, we see Corynebacterium having a cluster of low values in the younger age group, and Staphylococcus having a cluster of high values in the younger age group. 
+When making boxplots of the species (appendix) we see the relative abundance of Staphylococcus 1 being obviously dominant with a mean of 71.21 and a median of 93.67. This skewnedd is somewhat mediated by using a log transformation. There are 24 females and 15 males in the sample.
+When we view the data of age and CBorST, and sort on CBorST, we see no one above 30 has CB as dominant group and takes this as a first indication of change in bacteria composition with age. When plotting the Geni with age, we see Corynebacterium having a cluster of low values in the younger age group, and Staphylococcus having a cluster of high values in the younger age group. 
 
 ### Categorical variable
 Moreover, the continous variable Age is discreted to Agecat as a categorical variable The Agecat is a 3 level ordered factor variable made up by Junior(<=26), Adult(27<=age<=50), Senior(>=51), which is prepared for analysis the relationship of agecat and genus composition.
@@ -56,21 +60,18 @@ The sample sizes of each Agecat are unequal, the normally one-way ANOVA and POST
 
 ```{r setup, echo=FALSE, message=FALSE, include=FALSE}
 #'Setting up data & small cleaning & transformation'
-
 #Pre Explorative: glancing
 ##################
 data <- read.csv(paste0(getwd(),"/data/armpit.txt"), sep = ' ')
 data <- data[complete.cases(data),]
 data$Gender <- factor(trimws(data[["Gender"]], which = c("both", "left", "right"), whitespace = "[ \t\r\n]"))
 ##################
-
 #Rename the vars for readability
 ##################
 names(data) <- c("Cb1", "Cb2", "Cb3", "Cb4", 
                  "St1", "St2", "St3", "St4",  
                  "Age", "BMI", "Gender" )
 ##################
-
 #Create top 3 classes per observations
 ##################
 #x <- toString(names(sort(data[1,1:8],decreasing = TRUE)[1:3]))
@@ -80,11 +81,9 @@ for(i in 1:nrow(data)){
   data$top3[i] <- toString(names(sort(data[i,1:8],decreasing = TRUE)[1:3]))
 }
 #table(data$top3)
-
 #We see 26 combinations for 39 observations.... With this data any difference
 #test will seem significant.
 #Let's build top 2
-
 #top2
 data$top2 <- 0
 for(i in 1:nrow(data)){
@@ -93,7 +92,6 @@ for(i in 1:nrow(data)){
 #table(data$top2)
 #We still see 13 categories here... Still a lot.
 #Lets build top 1
-
 #top1
 data$top1 <- 0
 for(i in 1:nrow(data)){
@@ -102,7 +100,6 @@ for(i in 1:nrow(data)){
 #table(data$top1)
 #Here we have only 4 categories. However the question was composition.
 #Let's aggregate Cv and ST, and then build top 2 & top 3
-
 #aggregation
 data$CB <- 0
 data$ST <- 0
@@ -115,7 +112,6 @@ plot(data$Age, data$CB, main = 'CB & Age')
 plot(data$Age, data$ST, main = 'ST & Age')
 par(mfrow=c(1,1))
 #We get a hint of increase in CB, and decrease in ST, but needs testing.
-
 #Let's build CB_ST:
 #Which is dominant?
 data$CBorST <- 0
@@ -123,7 +119,6 @@ for(i in 1:nrow(data)){
   data$CBorST[i] <- toString(names(sort(data[i,15:16],decreasing = TRUE)[1:2]))
 }
 #table(data$CBorST)
-
 #When we view the dataset, and sort on CBorST, we see no one above 30 has CB
 #as dominant group. First indication of change in composition
 #shown with dplyr
@@ -131,7 +126,6 @@ library(dplyr)
 #data%>%
 #  select(Age, CBorST)%>%
 #  filter(CBorST == "CB, ST")
-
 #Age discrete to Agecat as 3 ordered factors
 data <- transform(data, Agecat = Age)
 data <- within(data,{
@@ -140,124 +134,96 @@ data <- within(data,{
                     Agecat[Age >= 51] <- "Senior"
                     })
 data$Agecat <- factor(data$Agecat, ordered = TRUE, levels = c('Junior','Adult', 'Senior'))
-
 ##################
-
-
 ```
 
 
-## Choice of non parametric tests
-We are confronted with asample size and since no information is given about the underlying distribution, we have to rely on non-parametric methods to make valid inferences.
+## Relation of 8 relative abundances amongst each other
+### Choice of test
+We are confronted with a small sample size and since no information is given about the underlying distribution, we have to rely on non-parametric methods to make valid inferences.
 For correlation testing, we consulted Hauke & Kowoski(2011)'s comparison of correlation tests, and concluded that Spearman rank was suitable for our problem.
 
 To better understand the Spearman Rank correlation significance test, we simulated
 data with the same sample size (n1=n2=13) which resembles what we observed and with higher sample sizes.. We noted that smaller sample sizes take higher correlation estimates for a significant p-value.
-Here we will sample from the uniform distribution and multiply by 100 (reflects our data)
-For Type1 testing, we sample from the exact distribution
-For Power testing, we limit the var1 range between .40 & .55, and create var2 by substracting var1 from 100 so they sum to 100 (as in our aggregated CB & ST).
+We also checked the Type1 error in a simulation, and saw it being controlled at the specified 0.05 level for our Spearman Rank cor test, similar to more established tests. 
 
-We also checked the Type1 error in a simulation, and saw it being controlled for Spearman Rank cor test, similar to more established tests. 
+### Hypothesis and testing procedure
 
-For group comparisons the anova was out of order, but the Wilcoxon Rank test as seen in the course was suitable.
+The null hypothesis can be stated as follows: Spearman's p = 0
 
+This testing can be done with the help of a permutation test. For each combination of species a permutation distribution is made, by permuting the relative abundances and calculating the Spearman correlation. Since the many possible permutations, we rely on the package "Psych", which calculates a p-value via the asymptotic t approximation with the formula:
+"t=(r*sqrt(n-2))/sqrt(1-r^2)" and "se=sqrt((1-r²)/(n-2))" 
+
+### Multiple testing adjustment
+To adjust for the multiple testing problem, we use the Benjamini-Yekutieli (BY) method, this is a less conservative correction than Bonferroni or Holms-Bonferroni (HB), which gives us more statistical power. However in our case, the amount of significant pairs did not change whether BY or HB was used. 
 
 # Results
 
-## Agecat analysis
+## Age categorical (agecat) analysis
 ### Interaction analysis
 
-The interaction graphs both show the across of the lines, which means there are interactions between Agecat and Gender/BMI. From the ANOVA tables, we found the p-value of Agecat:Gender and Agecat:BMI are 0.3689 and 0.2056 perspectively. As the interactions are not statistically significant, we are allowed to use one-way ANOVA to analysis the Agecat varible individully.
-```{r echo=FALSE, message=FALSE}
-
-#Interaction graphs
-attach(data)
-par(mfrow=c(1,2))
-interaction.plot(Agecat, Gender, ST, 
-                 xlab = "Agecat", 
-                 ylab = "Staphylococcus", 
-                 trace.label = "Gender",
-                 main = "Interaction of Agecat and Gender",
-                 ylim = c(0,100),  
-                 pch = c(19,17), 
-                 fixed = TRUE)
-interaction.plot(Agecat, BMI, ST, 
-                 xlab = "Agecat", 
-                 ylab = "Staphylococcus", 
-                 trace.label = "BMI",
-                 main = "Interaction of Agecat and BMI",
-                 ylim = c(0,100),  
-                 pch = c(19,17), 
-                 fixed = TRUE)
-
-#Two-way ANOVA
+The interaction graphs (appendix: interaction of agecat & BMI/Gender) both show the across of the lines, which means there are interactions between Agecat and Gender/BMI. From the ANOVA tables, we found the p-value of Agecat:Gender and Agecat:BMI are 0.37 and 0.21 perspectively. As the interactions are not statistically significant, we are allowed to use one-way ANOVA to analysis the Agecat variable individully.
+```{r, include=FALSE}
 #Agecat vs Gender
+attach(data)
 fit_1 <- aov(ST~Agecat*Gender)
 summary(fit_1)
 #Agecat vs BMI
 fit_2 <- aov(ST~Agecat*BMI)
 summary(fit_2)
-
 ```
+
+Checking the resutls of "aov(ST~Agecat\*Gender)"  we find a p-value of 0.0433 and for "aov(ST~Agecat\*BMI)" a p-value of 0.0384. Hence we can conclude the effect of the categorical age classes stays significant on the presence of Staphylococcus, even when adding Gender and BMI with their respective interactions.
 
 ### Kruskal-Wallis test of Agecat
 
-The boxplot shows that there are some difference between 3 agecats. From the result of the Kruskal-Wallis rank sum test, we found the p-value is 0.09773, which is greater than alpha(0.05), so we cannot reject the null hypothesis with this test.
-```{r echo=FALSE, message=FALSE}
-
+The boxplot (appendix: boxplot of categorical age) shows that there are some difference between 3 agecats. From the result of the Kruskal-Wallis rank sum test, we found the p-value is 0.09773, which is greater than alpha(0.05), so we cannot reject the null hypothesis with this test.
+```{r include=FALSE, message=FALSE}
 #Kruskal Wallis test
-boxplot(ST~Agecat,
-        ylab = "Staphylococcus",
-        main = "Staphylococcus by Agecat")
+
 kruskal.test(ST~Agecat)
 ```
 ## Age as continuous variable
 
 To verify if genus composition changes with age we use smooth line plot for each species in the two genus groups. However it is noticed that availability of relative abundances of all four species are not equal. For instance,  from Corynebacteria, Corynebacterium.2 is most dominant species, followed by Corynebacterium.1 (see appendix... for detail plots). In the Corynebacterium.1, the relative abundancy keeps constant value of 0% at young ages and suddenly increases  at around 30 year. It reaches maximum (approximately 41%)in age between 40 and 60 years, where after 60 year it gradually drops to 0%. 
 
-In Staphylococcus genus the dominant species is staphylococcus.1 (appendixx..). In opposite to Corynebacteria at young age it attains higher relative abundance (greater than 75%), which gradually decreases till age of 40 year. The relative abundance remains constant at its minimum (below 50 ) between age of 40 and 60 years, and increases for ages older than 60 year.
+In Staphylococcus genus the dominant species is staphylococcus.1 (appendix..). In opposite to Corynebacteria at young age it attains higher relative abundance (greater than 75%), which gradually decreases till age of 40 year. The relative abundance remains constant at its minimum (below 50 ) between age of 40 and 60 years, and increases for ages older than 60 year.
 
-```{r echo = FALSE}
-
-library(tidyverse)
+```{r echo = FALSE, message=FALSE, include=FALSE}
 library(dplyr)
 library(ggplot2)
 library(gridExtra)
-
+data$age <- data$Age
 #### plot for all 8 species 
-
 pcor1<-ggplot(data = data) + 
   geom_smooth(mapping = aes(x = age, y = Cb1))
-
 pcor2<-ggplot(data = data) + 
   geom_smooth(mapping = aes(x = age, y = Cb2))
-
 pcor3<-ggplot(data = data) + 
   geom_smooth(mapping = aes(x = age, y = Cb3))
-
 pcor4<-ggplot(data = data) + 
   geom_smooth(mapping = aes(x = age, y = Cb4))
-
 pstaph4<-ggplot(data = data) + 
   geom_smooth(mapping = aes(x = age, y = St4))
-
 pstaph3<-ggplot(data = data) + 
   geom_smooth(mapping = aes(x = age, y = St3))
-
 pstaph2<-ggplot(data = data) + 
   geom_smooth(mapping = aes(x = age, y = St2))
-
 pstaph1<-ggplot(data = data) + 
   geom_smooth(mapping = aes(x = age, y = St1))
 ```
 
  
-```{r echo = FALSE}
+```{r include = FALSE, message=FALSE}
 ###agregated species smoth line plots
+data$age <- data$Age
 ggplot(data = data, aes(x = age, y = ST)) +
   geom_point() +
   geom_smooth()
 
+```
+
+```{r, echo=FALSE, fig.height = 3, fig.width = 4, fig.align = "center", message=FALSE}
 ggplot(data = data, aes(x = age, y = CB)) + 
   geom_point() +
   geom_smooth()
@@ -270,33 +236,186 @@ In case of Staphylococcus the relative abundancy is high at early age of about 2
 It is clearly seen that the change in relative abundancy with age is not linear. consquently the correlations between the aggregated relative abundancy and age is calculated using the spearman correlation test in R.  correlation coefficient obtained for Corynebacterium and Staphylococcus is 0.40 and -0.41.
 
 ```{r include=FALSE}
-
 #correlation test
-cor.test(CB, age, method = "spearman")
-cor.test(ST, age, method = "spearman")
+cor.test(data$CB, data$age, method = "spearman")
+cor.test(data$ST, data$age, method = "spearman")
+
+```
+
+## Relation of relative abundances of the 8 species to one another
+To show that this test performs equivalent to a permutation test with n = 10000 (appendix: Hist and QQplot for a permutation result (n=10000) between CB1 & ST1), we performed a permutation test for the correlations between [Corynebacterium 1, Staphylococcus 1] and [Staphylococcus 3, Staphylococcus 4], these were chosen as in the former their distributions are not alike, while in the latter case they are more similar. From the results we can see that both permutation distributions are normally distributed, aside from the permutation distribution between Staph 3 and 4 having a small skew (appendix: Hist and QQplot for a permutation result (n=10000) between CB1 & ST1). The p-values are in the same range for both tests, for Cor 1 vs Staph 1, the t-test returned a p-value of 0.000334 and 0.00048 for the permutation. In the second comparison the results are 0.06973 and 0.0701 respectively. The asymptotic t approximation was used as this is a quicker method and the package allows for easy creation of confidence intervals and adjusting for multiple testing. 
+
+The heatmaps for show that overall the correlation coefficients are small, the six significant pairs in the non-adjusted heatmap are [Cor 1 with Cor 2, Cor 3], [Cor 2 with Cor 3], [Staph 1 with Cor 1, Cor 2, Cor 3]. Adjusting for multiple testing leaves three significant pairs [Cor 1 with Cor 2] and [Staph 1 with Cor 1, Cor 2] (Figure 4). The confidence intervals however are very wide, therefore we cannot conclude anything about the magnitude of the association, only about the direction (Figure 5). From the significant pairs, Staph  1 is negatively correlated with Cor 1 and 2, while Cor 1 and 2 are positively associated with each other. A possible cause for this is if Staph 1 grows in the same microbial environment as Cor 1 and 2 and are therefore competitors. Cor 1 and 2 are positively associated, this could be because of either a symbiotic relation or because the environment in which they thrive is slightly different from one another, which allows them to grow together and not compete. 
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.height = 5, fig.width = 6}
+library(reshape2)
+library(ggplot2)
+library(ggpubr)
+
+armpit <- data
+#first 8 columns show the relative abundances, age, BMI and gender
+# Get upper triangle
+get_upper_tri <- function(cormat){
+  cormat[lower.tri(cormat)]<- NA
+  return(cormat)
+}
+# Get lower triangle
+get_lower_tri<-function(cormat){
+  cormat[upper.tri(cormat)] <- NA
+  return(cormat)
+}
+
+library(psych)
+#Create figure
+a <- corr.test(armpit[1:8], method = "spearman", adjust = "BY")
+#ccorrections possible: holm, hochberg, hommel, bonferroni, bh, by, fdr, none
+#https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3045855/
+cor_pvalues <- round(a$p,2)
+cormat <- round(a$r,2)
+
+#without adjusted p-values
+lower_tri_p_values <- t(as.matrix(get_lower_tri(cor_pvalues)))
+lower_tri <- t(as.matrix(get_lower_tri(cormat)))
+# Melt the correlation matrix
+melted_cormat <- melt(lower_tri, na.rm = TRUE)
+melted_cormat_p_values_not_adjusted <- melt(lower_tri_p_values, na.rm = TRUE)
+
+#lower_tri_p_values
+# Create a ggheatmap
+ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
+  geom_tile(color = "white")+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Spearman\nCorrelation") +
+  theme_minimal()+ # minimal theme
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                   size = 10, hjust = 1))+
+  coord_fixed()
+
+not_adjusted <- ggheatmap + 
+  geom_text( aes(melted_cormat_p_values_not_adjusted$Var2, melted_cormat_p_values_not_adjusted$Var1, label = melted_cormat_p_values_not_adjusted$value), color = "black", size = 4) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.ticks = element_blank(),
+    legend.justification = c(1, 0),
+    legend.position = c(0.6, 0.7),
+    legend.direction = "horizontal")+
+  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                               title.position = "top", title.hjust = 0.5))
+
+
+#With adjusted p-values
+upper_tri_p_values <- as.matrix(get_upper_tri(cor_pvalues))
+upper_tri <- as.matrix(get_upper_tri(cormat))
+# Melt the correlation matrix
+melted_cormat <- melt(upper_tri, na.rm = TRUE)
+melted_cormat_p_values <- melt(upper_tri_p_values, na.rm = TRUE)
+
+# Create a ggheatmap
+ggheatmap2 <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
+  geom_tile(color = "white")+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Spearman\nCorrelation") +
+  theme_minimal()+ # minimal theme
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                   size = 10, hjust = 1))+
+  coord_fixed()
+
+adjusted <- ggheatmap2 + 
+  geom_text( aes(melted_cormat_p_values$Var2, melted_cormat_p_values$Var1, label = melted_cormat_p_values$value), color = "black", size = 4) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.ticks = element_blank(),
+    legend.justification = c(1, 0),
+    legend.position = c(0.6, 0.7),
+    legend.direction = "horizontal")+
+  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                               title.position = "top", title.hjust = 0.5))
+
+figure <- ggarrange(not_adjusted, adjusted,
+                    labels = c("A", "B"),
+                    ncol = 2, nrow = 1)
+#show(figure)
+annotate_figure(figure, top = "Correlation test results \n A: p-values not adjusted for multiple testing \n B: p-values adjusted with the Benjamini-Yekutieli method")
 
 ```
 
 
-
 # Conclusion
 
-## Genus composition relate to age
-
-### Genus composition among agecat
+## Genus composition among agecat
 Since the p-value is greater than 0.05, we cannot to reject the null hypothesis, which means the genus composition do not shows significant difference among Agecat. 
+
+
+## Relation of 8 relative abundances amongst each other
+
+\clearpage
+
 
 # References
 Hauke, J., & Kossowski, T. (2011). Comparison of values of Pearson's and Spearman's correlation coefficients on the same sets of data. Quaestiones geographicae, 30(2), 87-93.
 
 # Appendix
-plots for each species versus age as continuous variable
-```{r echo = FALSE}
+
+## Boxplots for the species relative abundance
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(reshape2)
+library(ggplot2)
+library(ggpubr)
+
+armpit <- read.csv(paste0(getwd(),"/data/armpit.txt"), sep = ' ')
+
+#first 8 columns show the relative abundances, age, BMI and gender
+armpit <- armpit[complete.cases(armpit),]
+
+armpit$Gender <- factor(trimws(armpit[["Gender"]], which = c("both", "left", "right"), whitespace = "[ \t\r\n]"))
+armpit$BMI <- factor(armpit$BMI)
+#check if all relative abundances sum op to 100
+#rowSums(armpit[1:8]) >= 99.99
+
+#Check visually with boxplots and numerically with the kolmogorov-smirnov test 
+#to see wether the distributions from two species are the same.
+
+armpit_bxp1 <- melt(armpit[1:8])
+bxp1 <- ggplot(armpit_bxp1, aes(x=variable, y=value)) + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                   size = 10, hjust = 1),
+        axis.title.x = element_blank())+
+  ylab("Relative abundances (%)") + 
+  geom_boxplot()
+
+armpit_bxp2 <- melt(log(armpit[1:8]+1))
+bxp2 <- ggplot(armpit_bxp2, aes(x=variable, y=value)) + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                   size = 10, hjust = 1),
+        axis.title.x = element_blank())+
+  ylab("Log-transformed relative abundances") + 
+  geom_boxplot()
+
+figure <- ggarrange(bxp1, bxp2,
+          labels = c("A", "B"),
+          ncol = 2, nrow = 1)
+
+annotate_figure(figure, top = "Relative abundance boxplots for the 8 different species")
+
+```
+
+## Plots for each species versus age as continuous variable
+```{r echo = FALSE, message=FALSE, warning=FALSE}
 grid.arrange(pcor1, pcor2, pcor3, pcor4, nrow = 2)
 grid.arrange(pstaph1, pstaph2, pstaph3, pstaph4, nrow = 2)
 ```
-A look at difference of Spearman Rank correlation estimate significanes for different sample sizes
-```{r spearmanbehav, echo=FALSE, message=FALSE}
+## Plots of difference of Spearman Rank correlation estimate significanes for different sample sizes
+```{r spearmanbehav, echo=FALSE, message=FALSE, fig.height = 4, fig.width = 6}
 p <- est <- px <- estx <- c()
 for (i in 1:10000){
   Y1 <- rnorm(13)
@@ -311,19 +430,15 @@ for (i in 1:10000){
 x <- data.frame(est, p)
 xx <- data.frame(estx, px)
 par(mfrow=c(1,2))
-
 hist(x[x$p<=0.05,1], breaks = 40, main=paste('+-', round(min(abs(x[x$p<0.05,1])),3),
      'seems to be minimum Spearman Rank \n cor value for 0.05 p-value \n (n1=n2=13)'))
-
 hist(xx[xx$p<=0.05,1], breaks = 40, main=paste('+-', round(min(abs(xx[xx$p<0.05,1])),3),
      'seems to be minimum Spearman Rank \n cor value for 0.05 p-value \n (n1=n2=60)'))
-
 par(mfrow=c(1,1))
 ```
 
-Type1 simulation for Spearman rank.
-```{r spearmanType1, echo=FALSE, message=FALSE}
-
+## Type1 simulation for Spearman rank
+```{r spearmanType1, echo=FALSE, fig.height = 4, fig.width = 6, message=FALSE}
 #H0 & Power testing for our groups
 #assuming an even n in groups of 13 (39/3)
 #sampling from runif and *100 to reflect out data
@@ -367,15 +482,12 @@ for (i in 1:1000){
 }
 # Monte - Carlo approximation of the power
 # for alpha = .05
-
-
 results_H0_A_runif$Value[1] <- mean(p.t < .05)
 results_H0_A_runif$Value[2] <- mean(p.wmw < .05)
 results_H0_A_runif$Value[3] <- mean(p.spr < .05)  
 results_H0_A_runif$Value[4] <- mean(p.tA < .05)
 results_H0_A_runif$Value[5] <- mean(p.wmwA < .05)
 results_H0_A_runif$Value[6] <- mean(p.sprA < .05) 
-
 library(ggplot2)
 ggplot(results_H0_A_runif, aes(factor(dist), Value, fill = test)) + 
   geom_bar(stat="identity", position = "dodge") + 
@@ -384,5 +496,249 @@ ggplot(results_H0_A_runif, aes(factor(dist), Value, fill = test)) +
   ggtitle("Power, Type1, for 10k reps")+
   facet_grid(. ~ Test)+
   theme_classic()
+```
+
+## Interaction of Agecat and BMI/Gender
+```{r echo=FALSE, message=FALSE, fig.height = 4, fig.width = 6, fig.align = "center"}
+#Interaction graphs
+attach(data)
+par(mfrow=c(1,2))
+interaction.plot(Agecat, Gender, ST, 
+                 xlab = "Agecat", 
+                 ylab = "Staphylococcus", 
+                 trace.label = "Gender",
+                 main = "Interaction of Agecat and Gender",
+                 ylim = c(0,100),  
+                 pch = c(19,17), 
+                 fixed = TRUE)
+interaction.plot(Agecat, BMI, ST, 
+                 xlab = "Agecat", 
+                 ylab = "Staphylococcus", 
+                 trace.label = "BMI",
+                 main = "Interaction of Agecat and BMI",
+                 ylim = c(0,100),  
+                 pch = c(19,17), 
+                 fixed = TRUE)
+#Two-way ANOVA
+
+```
+
+## Boxplot of categorical age
+```{r echo=FALSE, message=FALSE, fig.height = 3, fig.width = 4, fig.align = "center"}
+#Kruskal Wallis test
+attach(data)
+boxplot(ST~Agecat,
+        ylab = "Staphylococcus",
+        main = "Staphylococcus by Agecat")
+
+```
+
+## Hist and QQplot for a permutation result (n=10000) between CB1 & ST1
+
+```{r, include=FALSE, message=FALSE}
+###Project Principle statistics###
+
+library(reshape2)
+library(ggplot2)
+library(ggpubr)
+
+armpit <- read.csv(paste0(getwd(),"/data/armpit.txt"), sep = ' ')
+head(armpit)
+summary(armpit)
+#first 8 columns show the relative abundances, age, BMI and gender
+armpit <- armpit[complete.cases(armpit),]
+
+armpit$Gender <- factor(trimws(armpit[["Gender"]], which = c("both", "left", "right"), whitespace = "[ \t\r\n]"))
+armpit$BMI <- factor(armpit$BMI)
+#check if all relative abundances sum op to 100
+rowSums(armpit[1:8]) >= 99.99
+
+
+
+ks_pvalues <- data.frame(matrix(nrow = dim(armpit)[2]-3, ncol = dim(armpit)[2] - 3))
+rownames(ks_pvalues) <- colnames(armpit[1:8])
+colnames(ks_pvalues) <- colnames(armpit[1:8])
+for (x_index in 1:8){
+  for (y_index in 1:8){
+    x <- armpit[[x_index]]
+    y <- armpit[[y_index]]
+    ks_pvalues[x_index,y_index] <- ks.test(x,y)$p.value
+  }
+}
+
+round(ks_pvalues,3)
+
+#not all of the distributions are the same, therefore we permutate the order of the variables within each species
+
+#Check correlation distribution
+
+cor_permutation = c()
+for (i in 1:10000){
+  x = sample(armpit$Corynebacterium.1)
+  y = sample(armpit$Staphylococcus.1)
+  cor_permutation[i] = cor(x,y, method = "spearman")
+}
+
+test <- cor.test(armpit$Corynebacterium.1,armpit$Staphylococcus.1, method = "spearman" )
+test$p.value
+1 - mean(abs(cor_permutation) < abs(test$estimate))
+
+
+# Get upper triangle
+get_upper_tri <- function(cormat){
+  cormat[lower.tri(cormat)]<- NA
+  return(cormat)
+}
+# Get lower triangle
+get_lower_tri<-function(cormat){
+  cormat[upper.tri(cormat)] <- NA
+  return(cormat)
+}
+
+library(psych)
+#Create figure
+a <- corr.test(armpit[1:8], method = "spearman", adjust = "BY")
+#ccorrections possible: holm, hochberg, hommel, bonferroni, bh, by, fdr, none
+#https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3045855/
+cor_pvalues <- round(a$p,2)
+cormat <- round(a$r,2)
+
+#without adjusted p-values
+lower_tri_p_values <- t(as.matrix(get_lower_tri(cor_pvalues)))
+lower_tri <- t(as.matrix(get_lower_tri(cormat)))
+# Melt the correlation matrix
+melted_cormat <- melt(lower_tri, na.rm = TRUE)
+melted_cormat_p_values_not_adjusted <- melt(lower_tri_p_values, na.rm = TRUE)
+
+lower_tri_p_values
+# Create a ggheatmap
+ggheatmap <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
+  geom_tile(color = "white")+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Spearman\nCorrelation") +
+  theme_minimal()+ # minimal theme
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                   size = 10, hjust = 1))+
+  coord_fixed()
+
+not_adjusted <- ggheatmap + 
+  geom_text( aes(melted_cormat_p_values_not_adjusted$Var2, melted_cormat_p_values_not_adjusted$Var1, label = melted_cormat_p_values_not_adjusted$value), color = "black", size = 4) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.ticks = element_blank(),
+    legend.justification = c(1, 0),
+    legend.position = c(0.6, 0.7),
+    legend.direction = "horizontal")+
+  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                               title.position = "top", title.hjust = 0.5))
+
+
+#With adjusted p-values
+upper_tri_p_values <- as.matrix(get_upper_tri(cor_pvalues))
+upper_tri <- as.matrix(get_upper_tri(cormat))
+# Melt the correlation matrix
+melted_cormat <- melt(upper_tri, na.rm = TRUE)
+melted_cormat_p_values <- melt(upper_tri_p_values, na.rm = TRUE)
+
+# Create a ggheatmap
+ggheatmap2 <- ggplot(melted_cormat, aes(Var2, Var1, fill = value))+
+  geom_tile(color = "white")+
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-1,1), space = "Lab", 
+                       name="Spearman\nCorrelation") +
+  theme_minimal()+ # minimal theme
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, 
+                                   size = 10, hjust = 1))+
+  coord_fixed()
+
+adjusted <- ggheatmap2 + 
+  geom_text( aes(melted_cormat_p_values$Var2, melted_cormat_p_values$Var1, label = melted_cormat_p_values$value), color = "black", size = 4) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    panel.background = element_blank(),
+    axis.ticks = element_blank(),
+    legend.justification = c(1, 0),
+    legend.position = c(0.6, 0.7),
+    legend.direction = "horizontal")+
+  guides(fill = guide_colorbar(barwidth = 7, barheight = 1,
+                               title.position = "top", title.hjust = 0.5))
+
+figure <- ggarrange(not_adjusted, adjusted,
+                    labels = c("A", "B"),
+                    ncol = 2, nrow = 1)
+figure
+annotate_figure(figure, top = "Correlation test results \n A: p-values not adjusted for multiple testing \n B: p-values adjusted with the Benjamini-Yekutieli method")
+
+color_CI <- data.frame(t(a$ci.adj))
+color_CI <- (colSums(color_CI > 0) == 2) | (colSums(color_CI < 0) == 2)
+color_CI[color_CI == TRUE] <- "Red"
+color_CI[color_CI == FALSE] <- "White"
+
+rownames(a$ci.adj) <- rownames(a$ci)
+par(mar=c(2,8,2,2))
+boxplot(t(a$ci.adj), col = color_CI, horizontal = TRUE, main = "Adjusted confidence intervals", las = 1)
+abline(v = 0)
+
+
+```
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+qq <- ggplot(data.frame(c = cor_permutation), aes(sample = c)) +
+  stat_qq() + 
+  stat_qq_line() +
+  theme_minimal() +
+  ylab("Frequency") + 
+  xlab("Spearman Correlation")
+
+histo <- ggplot(data.frame(c = cor_permutation), aes(x = c)) +
+  geom_histogram(color="black", fill="white") + 
+  theme_minimal() +
+  ylab("Spearman Correlation") + 
+  xlab("Theoretical Quantiles Normal Distribution")
+
+figure <- ggarrange(histo, qq,
+                    labels = c("A", "B"),
+                    ncol = 2, nrow = 1)
+figure
+annotate_figure(figure, top = "Histogram (A) and QQ-plot (B) for a permutation result (n = 10 000) \n between Corynebacterium 1 and Staphylococcus 1")
+
+
+cor_permutation = c()
+for (i in 1:10000){
+  x = sample(armpit$Staphylococcus.3)
+  y = sample(armpit$Staphylococcus.4)
+  cor_permutation[i] = cor(x,y, method = "spearman")
+}
+
+test <- cor.test(armpit$Staphylococcus.3,armpit$Staphylococcus.4, method = "spearman" )
+test$p.value
+1 - mean(abs(cor_permutation) < abs(test$estimate))
+
+qq <- ggplot(data.frame(c = cor_permutation), aes(sample = c)) +
+  stat_qq() + 
+  stat_qq_line() +
+  theme_minimal() +
+  ylab("Frequency") + 
+  xlab("Spearman Correlation")
+
+histo <- ggplot(data.frame(c = cor_permutation), aes(x = c)) +
+  geom_histogram(color="black", fill="white") + 
+  theme_minimal() +
+  ylab("Spearman Correlation") + 
+  xlab("Theoretical Quantiles Normal Distribution")
+
+figure <- ggarrange(histo, qq,
+                    labels = c("A", "B"),
+                    ncol = 2, nrow = 1)
+figure
+annotate_figure(figure, top = "Histogram (A) and QQ-plot (B) for a permutation result (n = 10 000) \n between Staphylococcus 3 and Staphylococcus 4")
 ```
 
