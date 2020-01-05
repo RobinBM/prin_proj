@@ -352,11 +352,14 @@ annotate_figure(figure, top = "Correlation test results \n A: p-values not adjus
 
 # Conclusion
 
-## Genus composition among agecat
+## Genus composition among age categorical (agecat)
 Since the p-value is greater than 0.05, we cannot to reject the null hypothesis, which means the genus composition do not shows significant difference among Agecat. 
+
+## Genus composition for continuous age
 
 
 ## Relation of 8 relative abundances amongst each other
+
 
 \clearpage
 
