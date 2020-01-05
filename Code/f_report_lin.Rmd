@@ -508,7 +508,7 @@ attach(data)
 par(mfrow=c(1,2))
 interaction.plot(Agecat, Gender, ST, 
                  xlab = "Agecat", 
-                 ylab = "Staphylococcus", 
+                 ylab = "Relative Abundance of Staphylococcus", 
                  trace.label = "Gender",
                  main = "Interaction of Agecat and Gender",
                  ylim = c(0,100),  
@@ -516,7 +516,7 @@ interaction.plot(Agecat, Gender, ST,
                  fixed = TRUE)
 interaction.plot(Agecat, BMI, ST, 
                  xlab = "Agecat", 
-                 ylab = "Staphylococcus", 
+                 ylab = "Relative Abundance of Staphylococcus", 
                  trace.label = "BMI",
                  main = "Interaction of Agecat and BMI",
                  ylim = c(0,100),  
@@ -531,7 +531,7 @@ interaction.plot(Agecat, BMI, ST,
 #Kruskal Wallis test
 attach(data)
 boxplot(ST~Agecat,
-        ylab = "Staphylococcus",
+        ylab = "Relative Abundance of Staphylococcus",
         main = "Staphylococcus by Agecat")
 
 ```
