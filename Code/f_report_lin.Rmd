@@ -196,44 +196,66 @@ library(gridExtra)
 data$age <- data$Age
 #### plot for all 8 species 
 pcor1<-ggplot(data = data) + 
-  geom_smooth(mapping = aes(x = age, y = Cb1))
+  geom_smooth(mapping = aes(x = age, y = Cb1))+
+  ylab("CB1 Relative Abundancy (%)") + 
+  xlab("Age (year)")
 pcor2<-ggplot(data = data) + 
-  geom_smooth(mapping = aes(x = age, y = Cb2))
+  geom_smooth(mapping = aes(x = age, y = Cb2)) +
+  ylab("CB2 Relative Abundancy (%)") + 
+  xlab("Age (year)")
 pcor3<-ggplot(data = data) + 
-  geom_smooth(mapping = aes(x = age, y = Cb3))
+  geom_smooth(mapping = aes(x = age, y = Cb3)) +
+  ylab("CB3 Relative Abundancy (%)") + 
+  xlab("Age (year)")
 pcor4<-ggplot(data = data) + 
-  geom_smooth(mapping = aes(x = age, y = Cb4))
+  geom_smooth(mapping = aes(x = age, y = Cb4)) +
+  ylab("CB4 Relative Abundancy (%)") + 
+  xlab("Age (year)")
+  
 pstaph4<-ggplot(data = data) + 
-  geom_smooth(mapping = aes(x = age, y = St4))
+  geom_smooth(mapping = aes(x = age, y = St4)) +
+  ylab("SB4 Relative Abundancy (%)") + 
+  xlab("Age (year)")
 pstaph3<-ggplot(data = data) + 
-  geom_smooth(mapping = aes(x = age, y = St3))
+  geom_smooth(mapping = aes(x = age, y = St3)) +
+  ylab("SB3 Relative Abundancy (%)") + 
+  xlab("Age (year)")
 pstaph2<-ggplot(data = data) + 
-  geom_smooth(mapping = aes(x = age, y = St2))
+  geom_smooth(mapping = aes(x = age, y = St2)) +
+  ylab("SB2 Relative Abundancy (%)") + 
+  xlab("Age (year)")
 pstaph1<-ggplot(data = data) + 
-  geom_smooth(mapping = aes(x = age, y = St1))
+  geom_smooth(mapping = aes(x = age, y = St1)) +
+  ylab("SB1 Relative Abundancy (%)") + 
+  xlab("Age (year)")
 ```
 
  
 ```{r include = FALSE, message=FALSE}
 ###agregated species smoth line plots
-data$age <- data$Age
-ggplot(data = data, aes(x = age, y = ST)) +
+SBR<-ggplot(data = data, aes(x = age, y = Staphylococcus)) +
   geom_point() +
-  geom_smooth()
+  geom_smooth() +
+  ylab("SB Relative Abundancy (%)") + 
+  xlab("Age (year)")
+
+CBR<-ggplot(data = data, aes(x = age, y = Corynebacterium)) + 
+  geom_point() +
+  geom_smooth() +
+  ylab("CB Relative Abundancy (%)") + 
+  xlab("Age (year)")
 
 ```
 
 ```{r, echo=FALSE, fig.height = 3, fig.width = 4, fig.align = "center", message=FALSE}
-ggplot(data = data, aes(x = age, y = CB)) + 
-  geom_point() +
-  geom_smooth()
+grid.arrange(SBR, CBR, nrow = 1)
 ```
 
 For ease of interpretation and  comparison between  two Genus groups, we aggregate each of the four species in to one respective  group,  Corynebacterium and Staphylococcus. The result shows that the distribution of aggregated genus groups follows the dominant species distribution. As a result for Corynebacterium the relative abundancy gets minimum at the early age of around 20, and suddenly increases at around 24 year. It gets maximum approximately at age 43 and 60 years.  It drops gradually for ages older than 60 year. 
 
-In case of Staphylococcus the relative abundancy is high at early age of about 20 and gradually deacreses with increasing age.  Lower relative abundacy for this genus is attined when age is between 40 and 60.  For older ages than 60 its availability decreases so as its amount.
+In case of Staphylococcus the relative abundancy is high at early age of about 20 and gradually deacreses with increasing age.  Lower relative abundacy for this genus is attined when age is between 40 and 60.  For older ages than 60 the relative abundancy starts to increase again.
 
-It is clearly seen that the change in relative abundancy with age is not linear. consquently the correlations between the aggregated relative abundancy and age is calculated using the spearman correlation test in R.  correlation coefficient obtained for Corynebacterium and Staphylococcus is 0.40 and -0.41.
+It is clearly seen that the change in relative abundancy with age is not linear. Consequently, the correlations between the aggregated relative abundancy and age is calculated using the spearman correlation test in R.  correlation coefficient obtained for Corynebacterium and Staphylococcus is 0.40 and -0.41. since the association is not linear the correlation coefficient is small, but we got the information that Corynebacterium is positively associated while Staphylococcus is negatively associated. 
 
 ```{r include=FALSE}
 #correlation test
@@ -351,6 +373,7 @@ annotate_figure(figure, top = "Correlation test results \n A: p-values not adjus
 
 
 # Conclusion
+From the aggregated genus composition, the gene composition of the two groups change with age. in case of Staphylococcus genus, the relative abundancy is higher at early age which gradually decreases between 40 and 60 years of age, and it starts to increase after age 60. The opposite works for the Corynebacterium genus. However, in this analysis most of the people are younger than 40 year, and we recommend repeating the analysis in a homogenous data sample. 
 
 ## Genus composition among age categorical (agecat)
 Since the p-value is greater than 0.05, we cannot to reject the null hypothesis, which means the genus composition do not shows significant difference among Agecat. 
